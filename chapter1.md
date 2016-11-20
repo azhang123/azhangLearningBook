@@ -1,1 +1,248 @@
-# First Chapter
+###UIScrollView实现图片轮播器注意点
+
+***
+
+
+
+
+
+
+
+
+具体代码如下：
+
+```objc
+
+// ViewController.m
+
+// AZScrollViewTest
+
+//
+
+// Created by azhang on 16/11/20.
+
+// Copyright © 2016年 azhang. All rights reserved.
+
+//
+
+
+
+#import "ViewController.h"
+
+
+
+@interface ViewController ()<UIScrollViewDelegate>
+
+@property (weak, nonatomic) IBOutlet UIScrollView *scrollView;
+
+@property (weak, nonatomic) IBOutlet UITextView *textView;
+
+@property (weak, nonatomic) IBOutlet UIPageControl *pageControl;
+
+
+
+/*定时器*/
+
+@property(nonatomic,weak)NSTimer *timer;
+
+
+
+
+
+@end
+
+
+
+@implementation ViewController
+
+
+
+- (void)viewDidLoad {
+
+ [super viewDidLoad];
+
+
+
+ //UIScrollView
+
+ //1.设置尺寸
+
+ CGFloat scrollWidth=self.scrollView.frame.size.width;
+
+ CGFloat scrollHeight=self.scrollView.frame.size.height;
+
+ NSInteger pages=5;
+
+
+
+ //2.添加轮播图片
+
+ for (int i=0; i<pages; i++) {
+
+ UIImageView *imageView=[[UIImageView alloc]init];
+
+ UIImage *image=[UIImage imageNamed:[NSString stringWithFormat:@"img_0%d",i+1]];
+
+ imageView.frame=CGRectMake(scrollWidth*i, 0, scrollWidth, scrollHeight);
+
+ imageView.image=image;
+
+ [self.scrollView addSubview:imageView];
+
+
+
+ }
+
+ //3.设置滚动样式
+
+ //滚动高度设定为零时在垂直方向无法滚动
+
+ self.scrollView.contentSize=CGSizeMake(scrollWidth*pages, 0);
+
+ //开启分页功能
+
+ self.scrollView.pagingEnabled=YES;
+
+ //隐藏提示条
+
+ self.scrollView.showsHorizontalScrollIndicator=NO;
+
+
+
+ //4.UIPageControl
+
+ self.pageControl.hidesForSinglePage=YES;
+
+ self.pageControl.numberOfPages=pages;
+
+
+
+ [self.pageControl setValue:[UIImage imageNamed:@"current"] forKey:@"_currentPageImage"];
+
+ [self.pageControl setValue:[UIImage imageNamed:@"other"] forKey:@"_pageImage"];
+
+
+
+ //4.添加定时器
+
+ [self startTimer];
+
+ //5.设置scrollView的代理
+
+ self.scrollView.delegate=self;
+
+}
+
+
+
+/**
+
+ * 开启定时器
+
+ */
+
+-(void)startTimer
+
+{
+
+ //开启定时器
+
+ self.timer=[NSTimer scheduledTimerWithTimeInterval:2.0 target:self selector:@selector(nextPage:) userInfo:nil repeats:YES];
+
+
+
+ //NSDefaultRunLoopMode(默认)：同一时间只能执行一个任务
+
+ //NSRunLoopCommonModes（公用）：设置主线程在同一时间可以分配一定时间处理多个任务
+
+ [[NSRunLoop mainRunLoop]addTimer:self.timer forMode:NSRunLoopCommonModes];
+
+}
+
+
+
+//停止定时器
+
+-(void)stopTimer:(NSTimer *)timer
+
+{
+
+ [timer invalidate];
+
+}
+
+
+
+//下一页
+
+-(void)nextPage:(NSTimer *)timer
+
+{
+
+ NSInteger page=self.pageControl.currentPage+1;
+
+ if(page==5) {
+
+ page=0;
+
+ }
+
+ [self.scrollView setContentOffset:CGPointMake(self.scrollView.frame.size.width*page, 0) animated:YES];
+
+ NSLog(@"%zd",page);
+
+}
+
+
+
+
+
+#pragma mark-UIScrollView的代理方法
+
+
+
+//开始拖拽的同时关闭定时器
+
+-(void)scrollViewWillBeginDragging:(UIScrollView *)scrollView
+
+{
+
+ [self.timer invalidate];
+
+}
+
+//停止拖拽的同时开启定时器
+
+-(void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate
+
+{
+
+ [self startTimer];
+
+}
+
+
+
+//只要滚动就会调用
+
+-(void)scrollViewDidScroll:(UIScrollView *)scrollView
+
+{
+
+ int page=(int)(scrollView.contentOffset.x/scrollView.frame.size.width);
+
+
+
+ self.pageControl.currentPage=page;
+
+
+
+}
+
+
+
+
+
+@end
+
+```
